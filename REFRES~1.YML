@@ -1,5 +1,4 @@
-name: refresh-usage
-
+name: .github/workflows/refresh-usage.yml
 on:
   schedule:
     - cron: "*/15 * * * *"
