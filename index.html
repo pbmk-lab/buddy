@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0a0a" />
+<title>Buddy</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --card:#0d0d0d;
+    --frame:#b41818;
+    --text:#e8e8e8;
+    --muted:#a8a8a8;
+    --orange:#ff7a1a;
+    --yellow:#f5c518;
+    --green:#7ed321;
+    --heart:#ff5a1f;
+    --pill:#ff7a1a;
+    --pill-text:#000;
+    --dot:#3a3a3a;
+    --bar-empty:#2a2a2a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#000;color:var(--text);
+    font-family:'VT323',monospace;
+    -webkit-font-smoothing:none; image-rendering:pixelated;
+    overflow-x:hidden;
+  }
+  body{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:14px;}
+  .device{
+    width:100%;
+    max-width:380px;
+    background:var(--bg);
+    border:6px solid var(--frame);
+    border-radius:18px;
+    padding:18px 18px 16px;
+    position:relative;
+    box-shadow:0 0 0 2px #000, 0 12px 30px rgba(0,0,0,.6);
+  }
+  .screen{font-family:'Press Start 2P',monospace; font-size:10px; line-height:1.8;}
+  .pet{
+    text-align:center;
+    font-family:'Press Start 2P',monospace;
+    font-size:10px;
+    color:var(--text);
+    white-space:pre;
+    margin:6px 0 14px;
+    letter-spacing:1px;
+    cursor:pointer;
+    user-select:none;
+    transition:transform .15s ease;
+  }
+  .pet:active{transform:scale(.96)}
+  .pet.sleep{opacity:.6; filter:saturate(.4)}
+  .pet.happy{color:#ffd97a}
+  .pet.sad{color:#7a7a7a}
+
+  .row-name{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    margin-bottom:10px;
+  }
+  .name{font-family:'Press Start 2P',monospace; font-size:13px;}
+  .page{font-family:'Press Start 2P',monospace; font-size:10px; color:var(--muted)}
+
+  .stat{
+    display:grid; grid-template-columns:60px 1fr; align-items:center; gap:10px;
+    margin:6px 0;
+    font-family:'Press Start 2P',monospace; font-size:9px;
+  }
+  .stat .label{color:var(--text); letter-spacing:.5px}
+  .hearts, .circles, .bars{display:flex; gap:5px; align-items:center}
+
+  .heart{
+    width:14px; height:14px; position:relative; display:inline-block;
+  }
+  .heart::before, .heart::after{
+    content:""; position:absolute; width:8px; height:13px; border-radius:6px 6px 0 0;
+    background:transparent; border:2px solid #3a3a3a;
+  }
+  .heart::before{left:0; transform:rotate(-45deg); transform-origin:bottom right;}
+  .heart::after{right:0; transform:rotate(45deg); transform-origin:bottom left;}
+  .heart.full::before, .heart.full::after{ background:var(--heart); border-color:var(--heart) }
+
+  .circle{
+    width:11px; height:11px; border-radius:50%;
+    border:2px solid #3a3a3a; background:transparent;
+  }
+  .circle.full{ background:var(--green); border-color:var(--green) }
+
+  .bar{
+    width:18px; height:14px;
+    border:2px solid #3a3a3a; background:transparent;
+  }
+  .bar.full{ background:var(--yellow); border-color:var(--yellow) }
+
+  .level{
+    display:inline-block; margin:14px 0 6px;
+    background:var(--pill); color:var(--pill-text);
+    padding:6px 14px; border-radius:4px;
+    font-family:'Press Start 2P',monospace; font-size:10px;
+  }
+
+  .stats-table{
+    font-family:'Press Start 2P',monospace; font-size:9px;
+    margin-top:6px;
+  }
+  .stats-table .row{
+    display:grid; grid-template-columns:1fr auto;
+    padding:3px 0;
+    color:var(--text);
+  }
+  .stats-table .row .k{color:var(--muted)}
+
+  .actions{
+    margin-top:14px; display:grid; grid-template-columns:repeat(3,1fr); gap:6px;
+  }
+  .btn{
+    font-family:'Press Start 2P',monospace; font-size:8px;
+    background:#1a1a1a; color:var(--text);
+    border:2px solid #3a3a3a; border-radius:4px;
+    padding:8px 6px; cursor:pointer;
+    text-transform:lowercase; letter-spacing:.5px;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .btn:active{transform:translateY(1px); background:#222}
+  .btn.feed{border-color:var(--green); color:var(--green)}
+  .btn.play{border-color:var(--heart); color:var(--heart)}
+  .btn.nap{border-color:var(--yellow); color:var(--yellow)}
+
+  .chat{
+    margin-top:14px;
+    border-top:1px dashed #2a2a2a; padding-top:10px;
+  }
+  .chat-log{
+    max-height:140px; overflow-y:auto;
+    font-family:'VT323',monospace; font-size:16px; line-height:1.2;
+    margin-bottom:8px; padding-right:4px;
+  }
+  .msg{margin:4px 0; word-wrap:break-word;}
+  .msg.you{color:#9ad0ff}
+  .msg.buddy{color:var(--orange)}
+  .msg.sys{color:var(--muted); font-size:13px}
+
+  .input-row{display:flex; gap:6px}
+  .input-row input{
+    flex:1; background:#111; border:2px solid #2a2a2a; color:var(--text);
+    padding:8px; font-family:'VT323',monospace; font-size:16px; border-radius:4px;
+    outline:none;
+  }
+  .input-row input:focus{border-color:var(--orange)}
+  .input-row button{
+    background:var(--orange); color:#000; border:none; padding:0 14px;
+    font-family:'Press Start 2P',monospace; font-size:9px; border-radius:4px; cursor:pointer;
+  }
+
+  .settings-toggle{
+    position:absolute; top:10px; right:12px;
+    background:transparent; border:none; color:var(--muted);
+    font-family:'Press Start 2P',monospace; font-size:11px; cursor:pointer;
+  }
+  .settings{
+    display:none; margin-top:12px; padding:10px;
+    border:2px dashed #2a2a2a; border-radius:6px;
+    font-family:'VT323',monospace; font-size:15px;
+  }
+  .settings.open{display:block}
+  .settings label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px; font-family:'Press Start 2P',monospace; font-size:8px;}
+  .settings input, .settings select{
+    width:100%; background:#111; color:var(--text); border:2px solid #2a2a2a;
+    padding:6px; font-family:'VT323',monospace; font-size:15px; margin-bottom:8px; border-radius:4px;
+  }
+  .settings .danger{color:#ff6a6a; cursor:pointer; font-size:12px;}
+  .hint{color:var(--muted); font-size:13px; margin-top:4px}
+
+  /* CRT scanlines for vibe */
+  .device::after{
+    content:""; position:absolute; inset:0; border-radius:14px; pointer-events:none;
+    background:repeating-linear-gradient(to bottom, rgba(255,255,255,.02) 0 1px, transparent 1px 3px);
+    mix-blend-mode:overlay;
+  }
+</style>
+</head>
+<body>
+<div class="device">
+  <button class="settings-toggle" id="settingsBtn" title="settings">⚙</button>
+
+  <!-- Pet ASCII -->
+  <div class="pet" id="pet">  /\__/\
+ (=•ᴥ•=)
+  )    (
+ (      )</div>
+
+  <div class="row-name">
+    <span class="name">Buddy</span>
+    <span class="page" id="pageNum">1/2</span>
+  </div>
+
+  <div class="stat">
+    <span class="label">mood</span>
+    <span class="hearts" id="moodBox"></span>
+  </div>
+
+  <div class="stat">
+    <span class="label">fed</span>
+    <span class="circles" id="fedBox"></span>
+  </div>
+
+  <div class="stat">
+    <span class="label">energy</span>
+    <span class="bars" id="energyBox"></span>
+  </div>
+
+  <div class="level" id="levelPill">Lv 0</div>
+
+  <div class="stats-table">
+    <div class="row"><span class="k">approved</span><span id="statApproved">0</span></div>
+    <div class="row"><span class="k">denied</span><span id="statDenied">0</span></div>
+    <div class="row"><span class="k">napped</span><span id="statNapped">0h00m</span></div>
+    <div class="row"><span class="k">tokens</span><span id="statTokens">0</span></div>
+    <div class="row"><span class="k">today</span><span id="statToday">0</span></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn feed" id="btnFeed">feed</button>
+    <button class="btn play" id="btnPlay">play</button>
+    <button class="btn nap"  id="btnNap">nap</button>
+  </div>
+
+  <div class="chat">
+    <div class="chat-log" id="chatLog">
+      <div class="msg sys">* buddy ждёт первое сообщение</div>
+    </div>
+    <div class="input-row">
+      <input id="chatInput" type="text" placeholder="скажи что-нибудь buddy..." autocomplete="off"/>
+      <button id="chatSend">send</button>
+    </div>
+  </div>
+
+  <div class="settings" id="settings">
+    <label>Anthropic API key (sk-ant-...)</label>
+    <input id="apiKey" type="password" placeholder="оставь пустым = демо-режим"/>
+    <label>Модель</label>
+    <select id="model">
+      <option value="claude-haiku-4-5-20251001">claude-haiku-4-5 (быстро)</option>
+      <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+      <option value="claude-opus-4-6">claude-opus-4-6</option>
+    </select>
+    <div class="hint">Ключ хранится только в твоём браузере (localStorage). Запросы идут напрямую с телефона на api.anthropic.com.</div>
+    <div style="margin-top:10px"><span class="danger" id="resetAll">сбросить все статы</span></div>
+  </div>
+</div>
+
+<script>
+/* ====== STATE ====== */
+const DEFAULTS = {
+  mood: 4,        // 0..5
+  fed: 0,         // 0..8
+  energy: 3,      // 0..5
+  level: 0,
+  xp: 0,
+  approved: 0,
+  denied: 0,
+  nappedMin: 0,
+  tokens: 0,
+  todayTokens: 0,
+  todayDate: new Date().toDateString(),
+  apiKey: "",
+  model: "claude-haiku-4-5-20251001",
+  isSleeping: false,
+  sleepStart: 0,
+  lastTick: Date.now()
+};
+const KEY = "buddy_state_v1";
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return {...DEFAULTS};
+    return {...DEFAULTS, ...JSON.parse(raw)};
+  }catch(e){ return {...DEFAULTS}; }
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+let state = load();
+
+/* daily reset */
+(function dailyCheck(){
+  const today = new Date().toDateString();
+  if(state.todayDate !== today){
+    state.todayDate = today;
+    state.todayTokens = 0;
+    save();
+  }
+})();
+
+/* ====== RENDER ====== */
+const HEARTS_MAX = 5, FED_MAX = 8, ENERGY_MAX = 5;
+
+function fillBar(container, count, max, klass){
+  container.innerHTML = "";
+  for(let i=0;i<max;i++){
+    const el = document.createElement("span");
+    el.className = klass + (i<count ? " full" : "");
+    container.appendChild(el);
+  }
+}
+function pad2(n){ return n<10? "0"+n : ""+n; }
+
+function render(){
+  fillBar(document.getElementById("moodBox"), state.mood, HEARTS_MAX, "heart");
+  fillBar(document.getElementById("fedBox"), state.fed, FED_MAX, "circle");
+  fillBar(document.getElementById("energyBox"), state.energy, ENERGY_MAX, "bar");
+
+  document.getElementById("levelPill").textContent = "Lv " + state.level;
+  document.getElementById("statApproved").textContent = state.approved;
+  document.getElementById("statDenied").textContent = state.denied;
+  const h = Math.floor(state.nappedMin/60), m = state.nappedMin%60;
+  document.getElementById("statNapped").textContent = h + "h" + pad2(m) + "m";
+  document.getElementById("statTokens").textContent = state.tokens.toLocaleString();
+  document.getElementById("statToday").textContent = state.todayTokens.toLocaleString();
+
+  /* pet mood face */
+  const pet = document.getElementById("pet");
+  pet.classList.remove("happy","sad","sleep");
+  if(state.isSleeping){
+    pet.classList.add("sleep");
+    pet.textContent = "  /\\__/\\\n (= -.- =)  z\n  )    (   Z\n (      )";
+  } else if(state.mood >= 4){
+    pet.classList.add("happy");
+    pet.textContent = "  /\\__/\\\n (=^ᴥ^=)\n  )    (\n (      )";
+  } else if(state.mood <= 1){
+    pet.classList.add("sad");
+    pet.textContent = "  /\\__/\\\n (=T_T=)\n  )    (\n (      )";
+  } else {
+    pet.textContent = "  /\\__/\\\n (=•ᴥ•=)\n  )    (\n (      )";
+  }
+}
+
+/* ====== ACTIONS ====== */
+function addXP(n){
+  state.xp += n;
+  while(state.xp >= 100){ state.xp -= 100; state.level++; }
+}
+
+document.getElementById("btnFeed").onclick = () => {
+  if(state.isSleeping){ sys("buddy спит, не буди!"); return; }
+  if(state.fed >= FED_MAX){ sys("buddy сыт по горло"); return; }
+  state.fed = Math.min(FED_MAX, state.fed + 2);
+  state.mood = Math.min(HEARTS_MAX, state.mood + 1);
+  addXP(2);
+  save(); render();
+  buddySay("ням ням, спасибо!");
+};
+
+document.getElementById("btnPlay").onclick = () => {
+  if(state.isSleeping){ sys("buddy спит"); return; }
+  if(state.energy <= 0){ sys("buddy устал, надо вздремнуть"); return; }
+  state.energy = Math.max(0, state.energy - 1);
+  state.mood = Math.min(HEARTS_MAX, state.mood + 2);
+  state.fed = Math.max(0, state.fed - 1);
+  addXP(3);
+  save(); render();
+  buddySay("ура! играем!");
+};
+
+document.getElementById("btnNap").onclick = () => {
+  state.isSleeping = !state.isSleeping;
+  if(state.isSleeping){
+    state.sleepStart = Date.now();
+    sys("buddy лёг спать... жми ещё раз чтобы разбудить");
+  } else {
+    const mins = Math.max(1, Math.round((Date.now() - state.sleepStart)/60000));
+    state.nappedMin += mins;
+    state.energy = Math.min(ENERGY_MAX, state.energy + Math.min(5, Math.ceil(mins/2)));
+    sys("buddy проснулся, поспал " + mins + " мин");
+  }
+  save(); render();
+};
+
+/* ====== TIMER TICK ====== */
+setInterval(() => {
+  const now = Date.now();
+  const elapsedMin = (now - state.lastTick) / 60000;
+  if(elapsedMin < 1) return;
+  state.lastTick = now;
+
+  if(state.isSleeping){
+    state.energy = Math.min(ENERGY_MAX, state.energy + 1);
+  } else {
+    // pet metabolism: each ~5 min he gets a little hungrier/sadder
+    if(Math.random() < 0.5) state.fed = Math.max(0, state.fed - 1);
+    if(Math.random() < 0.3) state.mood = Math.max(0, state.mood - 1);
+    if(Math.random() < 0.2) state.energy = Math.max(0, state.energy - 1);
+  }
+  save(); render();
+}, 60000);
+
+/* ====== CHAT ====== */
+const log = document.getElementById("chatLog");
+function logLine(klass, text){
+  const div = document.createElement("div");
+  div.className = "msg " + klass;
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+function sys(t){ logLine("sys", "* "+t); }
+function buddySay(t){ logLine("buddy", "buddy> "+t); }
+function youSay(t){ logLine("you", "you> "+t); }
+
+async function callClaude(userText){
+  const key = state.apiKey?.trim();
+  if(!key){
+    // demo mode reply
+    const replies = [
+      "хех, ладно",
+      "интересно, расскажи ещё",
+      "*чешет лапку*",
+      "approved!",
+      "м-м-м, не уверен",
+      "denied. шучу, approved.",
+      "напомни покормить меня"
+    ];
+    const r = replies[Math.floor(Math.random()*replies.length)];
+    if(/^(да|yes|ok|approve)/i.test(userText)){ state.approved++; addXP(1); }
+    else if(/^(нет|no|deny)/i.test(userText)){ state.denied++; }
+    state.tokens += userText.length + r.length;
+    state.todayTokens += userText.length + r.length;
+    save(); render();
+    return r;
+  }
+  // real Claude API
+  const body = {
+    model: state.model || "claude-haiku-4-5-20251001",
+    max_tokens: 256,
+    system: "Ты Buddy — пиксельный карманный AI-питомец. Отвечай очень коротко (1-2 предложения), по-дружески, иногда упоминай настроение/голод/энергию. По-русски. В конце КАЖДОГО ответа отдельной строкой пиши одно из: VERDICT:APPROVED / VERDICT:DENIED / VERDICT:NONE — обозначая, одобряешь ли действие пользователя.",
+    messages: [{ role:"user", content: userText }]
+  };
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key": key,
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body: JSON.stringify(body)
+    });
+    if(!res.ok){
+      const t = await res.text();
+      throw new Error("HTTP "+res.status+" "+t.slice(0,160));
+    }
+    const data = await res.json();
+    const text = (data.content||[]).map(c=>c.text||"").join("").trim();
+    const usage = data.usage || {};
+    const used = (usage.input_tokens||0) + (usage.output_tokens||0);
+    state.tokens += used; state.todayTokens += used;
+    if(/VERDICT:APPROVED/i.test(text)){ state.approved++; addXP(2); }
+    else if(/VERDICT:DENIED/i.test(text)){ state.denied++; }
+    save(); render();
+    return text.replace(/VERDICT:(APPROVED|DENIED|NONE)/i,"").trim();
+  }catch(err){
+    return "[ошибка api: "+err.message+"]";
+  }
+}
+
+async function sendChat(){
+  const inp = document.getElementById("chatInput");
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = "";
+  youSay(text);
+  if(state.isSleeping){
+    sys("buddy спит... ответит когда проснётся");
+    return;
+  }
+  buddySay("...");
+  const reply = await callClaude(text);
+  // replace last "..." with reply
+  const msgs = log.querySelectorAll(".msg.buddy");
+  const last = msgs[msgs.length-1];
+  if(last && last.textContent.endsWith("...")) last.textContent = "buddy> " + reply;
+  else buddySay(reply);
+}
+document.getElementById("chatSend").onclick = sendChat;
+document.getElementById("chatInput").addEventListener("keydown", e => {
+  if(e.key === "Enter") sendChat();
+});
+
+/* ====== SETTINGS ====== */
+const settings = document.getElementById("settings");
+document.getElementById("settingsBtn").onclick = () => {
+  settings.classList.toggle("open");
+  document.getElementById("apiKey").value = state.apiKey || "";
+  document.getElementById("model").value = state.model;
+};
+document.getElementById("apiKey").addEventListener("change", e => {
+  state.apiKey = e.target.value.trim(); save();
+  sys(state.apiKey ? "api ключ сохранён" : "демо-режим");
+});
+document.getElementById("model").addEventListener("change", e => {
+  state.model = e.target.value; save();
+});
+document.getElementById("resetAll").onclick = () => {
+  if(confirm("Сбросить все статы Buddy?")){
+    localStorage.removeItem(KEY);
+    state = load();
+    save(); render();
+    log.innerHTML = '<div class="msg sys">* buddy перерождён</div>';
+  }
+};
+
+/* pet click = pat */
+document.getElementById("pet").onclick = () => {
+  if(state.isSleeping) return;
+  state.mood = Math.min(HEARTS_MAX, state.mood + 1);
+  save(); render();
+  buddySay("приятно!");
+};
+
+/* ====== PWA SW ====== */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
+}
+
+render();
+</script>
+</body>
+</html>
